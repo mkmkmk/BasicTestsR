@@ -2,7 +2,131 @@
 # ----------     ad qlec
 # ----------     https://www.scottaaronson.com/qclec.pdf
 # ----------------------
+# 
+# This script is designed to run line by line --> RStudio and Ctrl + Enter
+#
+# ----------------------
 rm(list=ls())
+
+
+# --------- "library" code
+q0 = t(t(1:0))  # |0〉
+q1 = t(t(0:1))  # |1〉
+
+H = matrix(c(1,1,1,-1), nrow=2) / sqrt(2)
+not = (1 - diag(1, 2))
+
+qp = H %*% q0  # |+〉
+qm = H %*% q1  # |-〉
+
+q00 = kronecker(q0, q0)
+q01 = kronecker(q0, q1)
+q10 = kronecker(q1, q0)
+q11 = kronecker(q1, q1)
+
+qpp = kronecker(qp,qp) #  |++〉
+qpm = kronecker(qp,qm) #  |+-〉
+qmp = kronecker(qm,qp) #  |-+〉
+qmm = kronecker(qm,qm) #  |--〉
+
+I = diag(1, 2)
+not = 1 - I
+cnot = kronecker (q0 %*% t(q0), I) + kronecker (q1 %*% t(q1), not)
+rotgate = function(th) matrix(c(cos(th), sin(th), -sin(th), cos(th)), 2, 2)
+
+noti = kronecker(not, I)
+H2 = kronecker(H, H)
+IH = kronecker(I, H)
+HI = kronecker(H, I)
+swap = matrix(c(1,0,0,0, 0,0,1,0, 0,1,0,0, 0,0,0,1), 4)
+
+pauliZ = matrix(c(1, 0, 0, -1), 2, 2)
+pauliY = matrix(c(0, 1i, -1i, 0), 2, 2)
+pauliX = not
+sgate = matrix(c(1, 0, 0, 1i), 2, 2)
+tgate = matrix(c(1, 0, 0, exp(.25i*pi)), 2, 2)
+
+XI = kronecker(not, I) 
+ZI = kronecker(pauliZ, I)
+II = kronecker(I, I)
+
+bell = cnot %*% HI %*% q00
+
+requal = function(a, b, dig=10) round(a, dig) == round(b, dig)
+
+toBloch = function (qbit)
+{
+    stopifnot(sum(Mod(qbit)^2) < 1 + 1e-10)
+    # TODO if not, rotate |0〉
+    stopifnot(abs(Im(qbit[1])) < 1e-10)
+    th = 2 * acos(qbit[1])
+    #sin = (1 - qbit[1]^2)^.5
+    #stopifnot(abs(sin - sin(th/2)) < 1e-9)
+    #phi = if (abs(th) > 1e-9) acos(Re(qbit[2]) / sin) else 0
+    phi = Arg(qbit[2])
+    round(c(th, phi) / pi, 8) 
+}
+
+toStateTb = function(th, phi)
+    round(q0 %*% t(cos(th/2)) + q1 %*% t(exp(1i*phi)*sin(th/2)), 10)
+
+toState = function(bloch)
+    toStateTb(bloch[1],  bloch[2])
+
+# post partial measurement state
+# measBasis - measurement basis-state list
+postmeas = function(state, ...)
+{
+    measBasis = list(...)
+    if(is.list(measBasis[[1]]))
+        measBasis = unlist(measBasis, recursive = FALSE)
+    res = 0
+    for (basis in measBasis)
+        res = res + (Conj(t(basis)) %*% state)[1,1] * basis
+    res / sqrt(sum(Mod(res)^2)) # eq. (5.1)
+}
+
+# mutliple kronecker
+multikron = function(...)
+{
+    inp = list(...)
+    if(is.list(inp[[1]]))
+        inp = unlist(inp, recursive = FALSE)
+    res = inp[[1]]
+    if (length(inp) < 2)
+        return(inp[[1]])
+    for (ii in 2:length(inp))
+        res = kronecker(res, inp[[ii]])
+    res
+}
+stopifnot(all(multikron(I) == I))
+stopifnot(all(multikron(I,H) == IH))
+stopifnot(all(multikron(H,I,I) == kronecker(HI, I)))
+stopifnot(all(multikron(I, H, I, I) == kronecker(I, kronecker(HI, I))))
+
+GHZ = (multikron(q0, q0, q0) + multikron(q1, q1, q1)) / sqrt(2)
+
+
+as.qubit = function(inp, nbits = NA)
+{
+    stopifnot(inp >= 0)
+    if (is.na(nbits))
+        nbits = max(1, ceiling(log2(inp)))
+    stopifnot(inp < 2^nbits)
+    ket = matrix(0, 2^nbits, 1)
+    ket[1 + inp] = 1
+    ket
+}
+stopifnot(as.qubit(0) == q0)
+stopifnot(as.qubit(1) == q1)
+stopifnot(as.qubit(3) == q11)
+stopifnot(as.qubit(0, 2) == q00)
+stopifnot(as.qubit(1, 2) == q01)
+stopifnot(as.qubit(127)[1 + 127] == 1)
+
+# --------- end of library code
+
+
 
 # ------ ad (2.8)
 {
@@ -16,16 +140,17 @@ rm(list=ls())
 U = matrix(c(1,1,-1,1), nrow=2) / sqrt(2)
 U
 
-qp = t(t(c(1,1))) / sqrt(2)
-qp  # |+〉
+t(t(c(1,1))) / sqrt(2) # |+〉
+qp  
 
 round(U %*% qp, 10)
 
-q0 = t(t(1:0))  # |0〉
+t(t(1:0))  # |0〉
 q0
 U %*% q0
 
-q1 = t(t(0:1))  # |1〉
+
+t(t(0:1))  # |1〉
 q1
 U %*% q1
 
@@ -34,10 +159,13 @@ round(U %*% (U %*% q0), 10)
 # ----- AD lecture 4 
 
 # eq. (4.2) Hadamard
-H = matrix(c(1,1,1,-1), nrow=2) / sqrt(2)
+matrix(c(1,1,1,-1), nrow=2) / sqrt(2)
 H
-q0 = t(t(1:0))  # |0〉
-q1 = t(t(0:1))  # |1〉
+t(t(1:0))  # |0〉
+q0
+
+t(t(0:1))  # |1〉
+q1
 
 H %*% q0
 round(H %*% (H %*% q0), 10)
@@ -47,19 +175,13 @@ round(H %*% (H %*% q1), 10)
 H %*% (H %*% (H %*% q1))
 
 
-# --------- ad bomb (trochę w przód wybiegło)
-q00 = kronecker(q0, q0)
-q01 = kronecker(q0, q1)
-q10 = kronecker(q1, q0)
-q11 = kronecker(q1, q1)
-not = (1 - diag(1, 2))
-cnot = kronecker (q0 %*% t(q0), diag(1,2)) + kronecker (q1 %*% t(q1), not)
-rotgate = function(th) matrix(c(cos(th), sin(th), -sin(th), cos(th)), 2, 2)
+# --------- ad bomb (it ran a little ahead)
+
 N = 10
 step1_dud = kronecker(rotgate(pi/2/N) %*% q0, q0)
 step1_bomb = cnot %*% step1_dud
-round(step1_bomb, 3)
-round(step1_dud, 3)
+step1_bomb
+step1_dud
 all(step1_dud == cnot %*% cnot %*% step1_dud) # $$$
 
 # after step 1
@@ -75,23 +197,11 @@ all(step1_dud == cnot %*% cnot %*% step1_dud) # $$$
 #     | |10〉| 0.000 | 0.156 | * | 0.000/0.988  | 0.156/1 
 #     | |11〉| 0.156 | 0.000 |   | 0            | 0         
 
-# post partial measurement state
-# measBasis - measurement basis-state list
-postmeas = function(state, ...)
-{
-    measBasis = list(...)
-    if(is.list(measBasis[[1]]))
-        measBasis = unlist(measBasis, recursive = FALSE)
-    res = 0
-    for (basis in measBasis)
-        res = res + (Conj(t(basis)) %*% state)[1,1] * basis
-    res / sqrt(sum(Mod(res)^2)) # eq. (5.1)
-}
 round(postmeas(step1_bomb, q00, q10), 3)
 round(postmeas(step1_dud, q00, q10), 3)
 round(postmeas(step1_bomb, list(q00, q10)), 3)
 
-# prawie symulacja bomby
+# almost a bomb simulation
 bomb = cnot %*% kronecker(rotgate(pi/2/N), diag(1,2))
 dud = kronecker(rotgate(pi/2/N), diag(1,2))
 qcirc = dud
@@ -103,7 +213,7 @@ qcirc = bomb
     for(i in 1:N)
     {
         state = qcirc %*% state
-        # zakładamy że bomba nie wybuchła:
+        # we assume that the bomb did not explode:
         state = postmeas(state, q00, q10)
     }
     round(state, 3)
@@ -113,14 +223,11 @@ qcirc = bomb
 # ----- AD lecture 5 
 
 # eq. (5.5)
-not = (1 - diag(1, 2))
-noti = kronecker(not, diag(1, 2))
-noti
+(1 - diag(1, 2))
+not 
 
-q00 = kronecker(q0, q0)
-q01 = kronecker(q0, q1)
-q10 = kronecker(q1, q0)
-q11 = kronecker(q1, q1)
+kronecker(not, diag(1, 2))
+noti
 
 q00
 q01
@@ -134,14 +241,14 @@ noti %*% q11   # => q01
 
 
 # eq. (5.6)
-H = (1 - 2 * (0:1) %*% t(0:1)) / 2^.5
+(1 - 2 * (0:1) %*% t(0:1)) / 2^.5
 H
-H = matrix(c(rep(1, 3), -1), 2, 2) / 2^.5
+matrix(c(rep(1, 3), -1), 2, 2) / 2^.5
 H
 H %*% 1:0
 H %*% 0:1
 
-H2 = kronecker(H, H)
+kronecker(H, H)
 H2
 H2 %*% q00   # |++〉
 H2 %*% q01   # |+-〉
@@ -165,11 +272,11 @@ kronecker(H, diag(1, 2)) * 2^.5
 kronecker(diag(1, 2), H) * 2^.5
 
 # eq. (5.7) (5.8) 
-cnot = kronecker (q0 %*% t(q0), diag(1,2)) + kronecker (q1 %*% t(q1), not)
+kronecker (q0 %*% t(q0), diag(1,2)) + kronecker (q1 %*% t(q1), not)
 cnot
 not
-I = diag(1, 2)
-HI = kronecker(H, I)
+diag(1, 2)
+kronecker(H, I)
 HI
 
 # (H ⊗ I) (q0 ⊗ q0) == (H q0) ⊗ q0
@@ -179,14 +286,14 @@ HI %*% q00 == kronecker(H %*% q0, q0)
 cnot %*% kronecker(H %*% q0 , q0) # eq. (5.7)
 cnot %*% HI %*% q00
 
-# ok, można niezależnie wpuścić sumę na CNOT, i wtedy zgadnąć wynik
+# ok, you can independently enter the sum on the CNOT, and then guess the result
 cnot %*% HI %*% q00
 cnot %*% kronecker(qp, q0)
 cnot %*% (q00 + q10) / sqrt(2)
 (cnot %*% q00 + cnot %*% q10) / sqrt(2)
 (q00 + q11) / sqrt(2)
 
-bell = cnot %*% HI %*% q00
+cnot %*% HI %*% q00
 bell
 
 H %*% q0   #  |+〉
@@ -219,27 +326,6 @@ postmeas(bell, kronecker(q0, ifOneIs), kronecker(q1, ifOneIs))
 postmeas(bell, kronecker(ifOneIs, q0), kronecker(ifOneIs, q1))
 
 
-# ----------- lib
-multikron = function(...)
-{
-    inp = list(...)
-    if(is.list(inp[[1]]))
-        inp = unlist(inp, recursive = FALSE)
-    res = inp[[1]]
-    if (length(inp) < 2)
-        return(inp[[1]])
-    for (ii in 2:length(inp))
-        res = kronecker(res, inp[[ii]])
-    res
-}
-IH = kronecker(I, H)
-stopifnot(all(multikron(I) == I))
-stopifnot(all(multikron(I,H) == IH))
-stopifnot(all(multikron(H,I,I) == kronecker(HI, I)))
-stopifnot(all(multikron(I, H, I, I) == kronecker(I, kronecker(HI, I))))
-
-
-
 # ----- swap 
 #
 #     00 01 10 11    
@@ -247,7 +333,7 @@ stopifnot(all(multikron(I, H, I, I) == kronecker(I, kronecker(HI, I))))
 # 01   0  0  1  0    
 # 10   0  1  0  0
 # 11   0  0  0  1
-swap = matrix(c(1,0,0,0, 0,0,1,0, 0,1,0,0, 0,0,0,1), 4)
+matrix(c(1,0,0,0, 0,0,1,0, 0,1,0,0, 0,0,0,1), 4)
 swap %*% q00 == q00
 swap %*% q10 == q01 
 swap %*% q01 == q10
@@ -294,7 +380,7 @@ qr(q1 %*% t(Conj(q1)))$rank
 qr((q0 %*% t(Conj(q0)) + q1 %*% t(Conj(q1))) / 2 )$rank
 qr(qp %*% t(Conj(qp)))$rank
 
-# eq. (6.9) --> ok ale brak ⊗
+# eq. (6.9) --> ok but ⊗ is missing
 (q00 + q01 + q10) / sqrt(3)
 kronecker(q0, qp) * sqrt(2/3) + kronecker(q1, q0) * sqrt(1/3)  # ok!
 eq69 = (q00 + q01 + q10) / sqrt(3)
@@ -332,25 +418,6 @@ if (FALSE)
     lines(th, sin(th/2), type = 'l', col = "red")
 }
 
-toBloch = function (qbit)
-{
-    stopifnot(sum(Mod(qbit)^2) < 1 + 1e-10)
-    # TODO if not, rotate |0〉
-    stopifnot(abs(Im(qbit[1])) < 1e-10)
-    th = 2 * acos(qbit[1])
-    #sin = (1 - qbit[1]^2)^.5
-    #stopifnot(abs(sin - sin(th/2)) < 1e-9)
-    #phi = if (abs(th) > 1e-9) acos(Re(qbit[2]) / sin) else 0
-    phi = Arg(qbit[2])
-    round(c(th, phi) / pi, 8) 
-}
-
-toStateTb = function(th, phi)
-    round(q0 %*% t(cos(th/2)) + q1 %*% t(exp(1i*phi)*sin(th/2)), 10)
-
-toState = function(bloch)
-    toStateTb(bloch[1],  bloch[2])
-
 th  = c(0, pi, pi/2, pi/2, pi/2, pi/2)
 phi = c(0, 0,  0,    pi,   pi/2, -pi/2) 
 
@@ -367,11 +434,16 @@ toBloch(qp)
 toBloch(qm)
 toBloch((q1 - q0) / sqrt(2))
 
-pauliZ = matrix(c(1, 0, 0, -1), 2, 2)
-pauliY = matrix(c(0, 1i, -1i, 0), 2, 2)
-pauliX = not
-sgate = matrix(c(1, 0, 0, 1i), 2, 2)
-tgate = matrix(c(1, 0, 0, exp(1i*pi/4)), 2, 2)
+matrix(c(1, 0, 0, -1), 2, 2)
+pauliZ 
+matrix(c(0, 1i, -1i, 0), 2, 2)
+pauliY 
+pauliX 
+not
+sgate 
+matrix(c(1, 0, 0, 1i), 2, 2)
+tgate 
+matrix(c(1, 0, 0, exp(1i*pi/4)), 2, 2)
 
 all(Mod(sgate - (tgate%*%tgate)) < 1e-9)
 
@@ -398,7 +470,6 @@ cnot %*% kronecker(qp, q0)
 
 # quantum money bomb attack
 # ad eq. (8.1)
-rotgate = function(th) matrix(c(cos(th), sin(th), -sin(th), cos(th)), 2, 2)
 
 round(rotgate(pi/2), 10)
 round(rotgate(pi/4), 10)
@@ -417,11 +488,11 @@ cnot %*% kronecker(rotgate(pi/2/N) %*% q0, q0)  # ok
 postmeas(cnot %*% kronecker(rotgate(pi/2/N) %*% q0, q0), q00, q10) # |00〉-> ok
 postmeas(cnot %*% kronecker(rotgate(pi/2/N) %*% q0, q1), q01, q11) # |01〉-> ok
 
-                       #  |Cα
-qpp = kronecker(qp,qp) #  |++〉
-qpm = kronecker(qp,qm) #  |+-〉
-qmp = kronecker(qm,qp) #  |-+〉
-qmm = kronecker(qm,qm) #  |--〉
+#      |Cα
+qpp #  |++〉
+qpm #  |+-〉
+qmp #  |-+〉
+qmm #  |--〉
 
 postmeas(cnot %*% kronecker(rotgate(pi/2/N) %*% q0, qm), qpm, qmm)
 
@@ -438,8 +509,9 @@ alfa = q1
 meas = list(q01, q11)
 meas = list(kronecker(q0, alfa), kronecker(q1, alfa))
 # --
-# dla |+〉i |-〉obracam przed pomiarem bazę żeby pomiar był w bazie { |+〉, |-〉}
-# wtedy |+〉<--> |0〉i |-〉<--> |1〉
+# for |+〉and |-〉you rotate the basis before measuring 
+# so that the measurement is in the { |+〉, |-〉}
+# then |+〉<--> |0〉and |-〉<--> |1〉
 qcirc = hbase %*% cnot %*% kronecker(rotgate(pi/2/N), diag(1,2))
 # --
 #alfa = H %*% qm
@@ -448,7 +520,7 @@ alfa = qm
 meas = list(q01, q11)
 meas = list(kronecker(q0, H %*% alfa), kronecker(q1, H %*% alfa))
 round(meas[[2]], 3)
-# ok - jest nawet opisane to małe skakanie !!!
+# ok - even this little jumping is mentioned!
 # --
 #alfa = H %*% qp
 alfa = qp
@@ -456,7 +528,7 @@ alfa = qp
 meas = list(q00, q10)
 meas = list(kronecker(q0, H %*% alfa), kronecker(q1, H %*% alfa))
 # --
-# pomiar |-〉 (obraca się)
+# ok, |-〉rotates
 -cnot
 cminusnot = kronecker (q0 %*% t(q0), diag(1,2)) + kronecker (q1 %*% t(q1), -not)
 qcirc = hbase %*% cminusnot %*% kronecker(rotgate(pi/2/N), diag(1,2))
@@ -552,14 +624,15 @@ all(cnot %*% cnot == diag(1,4))
 # ----- AD lecture 9 
 # superdense coding
 
-# eq. (9.1), ok chyba trzeba zamienić kolejność w ostatnim 
+# eq. (9.1), ok, but I think you need to change the order in the last one
+kronecker(not, diag(1,2)) 
+XI
+kronecker(pauliZ, diag(1,2))
+ZI
+kronecker(I, I)
+II
 
-XI = kronecker(not, diag(1,2)) 
-ZI = kronecker(pauliZ, diag(1,2))
-I = diag(1,2)
-II = kronecker(I, I)
-
-# wszędzie dla 2go bit-a jest I czyli nie ruszamy go
+# for the 2nd bit there is always I, so we don't touch it
 II %*% bell
 XI %*% bell
 ZI %*% bell
@@ -570,8 +643,9 @@ I %*% q1
 XI %*% ZI %*% bell # error
 
 
-# eq. (9.2) - error!!
-IH = kronecker(diag(1,2),H)
+# eq. (9.2) - error?
+kronecker(I, H)
+IH
 errBobT = matrix(c(1,1,0,0, 0,0,-1,1, 0,0,1,-1, 1,-1,0,0), 4) / sqrt(2)
 bobT = swap %*% HI %*% cnot %*% swap 
 
@@ -640,8 +714,8 @@ kronecker(II, pauliZ) %*% kronecker(II, pauliX) %*% postm
 # ok!!!!
 
 # -------
-# teleportacja połówki innej pary Bell
-# bit 0 to dodatkowy bit bity 1 2 3 to tj. Fig. 10.1
+# teleportation of half of another Bell's pair
+# bit 0 is an additional bit, bits 1 2 3 are in Fig. 10.1
 state = multikron(I, H, I, I) %*% multikron(I, cnot, I) %*% kronecker(bell, bell) 
 ifAliceSees = q00
 postm = postmeas(state, multikron(q0, ifAliceSees, q0), multikron(q0, ifAliceSees, q1), multikron(q1, ifAliceSees, q0), multikron(q1, ifAliceSees, q1))
@@ -691,7 +765,7 @@ all(multikron(I, swap, I) %*% multikron(swap, I, I) %*% postm == multikron(ifAli
 
 # -----------------
 # ad GHZ
-GHZ = (multikron(q0, q0, q0) + multikron(q1, q1, q1)) / sqrt(2)
+(multikron(q0, q0, q0) + multikron(q1, q1, q1)) / sqrt(2)
 GHZ
 
 ifISee = q0
@@ -710,9 +784,6 @@ postmeas(someEn, multikron(q0, q0, ifISee), multikron(q0, q1, ifISee), multikron
 
 
 # ----- AD lecture 14
-requal = function(a, b, dig) round(a, dig) == round(b, dig)
-
-
 
 ifOneIs = q1 # then ...
 postmeas(bell, kronecker(q0, ifOneIs), kronecker(q1, ifOneIs))
@@ -734,7 +805,6 @@ Mod(Conj(t(q1)) %*% rotgate(pi/8) %*% q0)^2 == sin(pi/8)^2
 Mod(Conj(t(q1)) %*% rotgate(pi/8) %*% q1)^2 == cos(pi/8)^2
 
 
-
 # x=0 y=0 -> xy==0
 Mod(Conj(t(q0)) %*% rotgate(pi/8) %*% q0)^2
 
@@ -742,7 +812,6 @@ meas = q0
 meas = q1
 Mod(Conj(t(q0)) %*% meas)^2
 Mod(Conj(t(q0)) %*% rotgate(pi/8) %*% meas)^2
-
 
 round(H2 %*% bell, 9)
 round((qpp + qmm) / sqrt(2), 9)
@@ -760,7 +829,7 @@ kronecker(H, rotgate(pi/8)) %*% bell
 # x=0 y=0  
 # if x=0 Alice measures in {|0〉,|1〉}
 # if y=0 Bob measures in {|π/8〉,|5π/8〉}
-# sukces gdy a=0 b=0 or a=1 b=1 ---> Table 13.1
+# success when a=0 b=0 or a=1 b=1 ---> Table 13.1
 # P(a=0)P(b=0|a=0) + P(a=1)P(b=1|a=1)
 # P(a=0) == P. Alice sees |0〉
 pa0 = as.numeric(Mod(Conj(t(q00)) %*% bell)^2)
@@ -779,7 +848,7 @@ pa0*pb0 + pa1*pb1
 cos(pi/8)^2
 
 # x=1 y=0  
-# sukces gdy a=0 b=0 or a=1 b=1
+# success when a=0 b=0 or a=1 b=1
 
 # if x=1 Alice measures in {|+〉,|−〉}
 # if y=0 Bob measures in {|π/8〉,|5π/8〉}
@@ -815,6 +884,60 @@ Mod(Conj(t(q00)) %*% postmeas(HI %*% bell, q00, q10))^2
 
 
 # ----- AD lecture 17
+
+#
+#---- (17.3) 
+
+x = q0;  f = 0
+kronecker(x, not %*% as.qubit(f)) 
+x = q0;  f = 1
+kronecker(x, not %*% as.qubit(f)) 
+x = q1;  f = 0
+kronecker(x, not %*% as.qubit(f)) 
+x = q1;  f = 1
+kronecker(x, not %*% as.qubit(f)) 
+
+# (17.1) -> (17.2)  &  (17.1) -> (17.3)
+allbits = expand.grid(rep(list(0:1), 2))
+for(xrow in 1:nrow(allbits))
+{
+    row = as.numeric(allbits[xrow,])
+    f = row[1]
+    x = as.qubit(row[2])
+    ok = all(requal(
+        2^-.5 * (kronecker(x, as.qubit((0 + f)%%2)) - kronecker(x, as.qubit((1 + f)%%2))),
+        (-1)^f * kronecker(x, qm)
+    ))
+    stopifnot(ok)
+}    
+# if the second register is placed in the |+〉state, then nothing happens
+allbits = expand.grid(rep(list(0:1), 2))
+for(xrow in 1:nrow(allbits))
+{
+    row = as.numeric(allbits[xrow,])
+    f = row[1]
+    x = as.qubit(row[2])
+    ok = all(requal(
+        2^-.5 * (kronecker(x, as.qubit((0 + f)%%2)) + kronecker(x, as.qubit((1 + f)%%2))),
+        kronecker(x, qp)
+        ))
+    stopifnot(ok)
+}    
+
+f = 0; x = q0
+kronecker(x, qm)
+
+kronecker(x, not %*% H %*% as.qubit(f)) 
+
+x = q0;  f = 1
+kronecker(H %*% x, not %*% H %*% as.qubit(f)) 
+kronecker(H %*% x, not %*% H %*% as.qubit(f)) 
+x = q1;  f = 1
+kronecker(H %*% x, not %*% H %*% as.qubit(f)) 
+
+x = q0; f = 0
+
+
 # Deutch
 #---- (17.5) 
 f = c(0, 1)
@@ -843,7 +966,7 @@ multikron(H %*% q1, H %*% q1, H %*% q0, H %*% q1)
 multikron(H %*% q1, H %*% q1, H %*% q1, H %*% q0)
 multikron(H %*% q1, H %*% q1, H %*% q1, H %*% q1)
 
-# left i right to strony wzoru (17.9)
+# left and right sides of eq. (17.9)
 n = 10
 n = 8
 n = 6
@@ -851,46 +974,91 @@ n = 4
 allbits = expand.grid(rep(list(0:1), n))
 for(xrow in 1:2^n)
 {
-    x = unlist(allbits[xrow,], use.names = F)
-    left = c()
+    x = as.numeric(allbits[xrow,])
+    right = c()
     for(yrow in 1:2^n)
     {
         y = unlist(allbits[yrow,], use.names = F)
-        left = c(left, (-1)^sum(rev(x)*y))
+        right = c(right, (-1)^sum(rev(x)*y))
     }
-    left = t(t(left)) / sqrt(2^n)
+    right = t(t(right)) / sqrt(2^n)
     
-    right = list()
+    left = list()
     for(i in 1:length(x))
-        right[[i]] = if (x[i] == 0) H %*% q0 else H %*% q1
-    right = multikron(right)
+        left[[i]] = if (x[i] == 0) H %*% q0 else H %*% q1
+    left = multikron(left)
     stopifnot(max(Mod(left - right)) < 1e-12)
 }
 
 
+# ----- AD lecture 18
+
+# Bernstein-Vazirani, (18.4)
+n = 8
+n = 4
+allbits = expand.grid(rep(list(0:1), n))
+for(si in 1:2^n)
+{
+    s = unlist(allbits[si,], use.names = F)
+    ket_s = matrix(0, 2^n, 1)
+    ket_s[si] = 1
+    inner = c()
+    for(xrow in 1:2^n)
+    {
+        x = unlist(allbits[xrow,], use.names = F)
+        inner = c(inner, (-1)^sum(s*x))
+    }
+    inner = t(t(inner)) / sqrt(2^n)
+    Hn = multikron(rep(list(H), n))
+    stopifnot(max(Mod(Hn %*% inner - ket_s)) < 1e-12)
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ad Birthday paradox 
+# if there were N days in the year, then you’d need about √N 
+# people in the room for a likely birthday collision
+# N - number of days, n - number of people
+N = 365
+n = 23
+# ≈≈
+(1 - 1/N)^(n*(n-1)/2)
+.5
+# ≈≈
+(1-1/N)^(n^2/2)
+.5
+# ≈≈
+(1-1/N)^(n^2)
+(.5)^2
+# ≈≈
+log((1-1/N)^(n^2))
+-2*log(2)
+# ≈≈
+n^2*log(1-1/N)
+-2*log(2)
+# ≈≈
+n^2
+-2*log(2)/log(1-1/N)
+# ≈≈
+n^2
+2*log(2)/log(N/(N-1))
+# ≈≈
+# N --> N+1
+n^2
+2*log(2)/log((N+1)/N)
+# ≈≈
+n^2
+2*log(2)/log(1+1/N)
+# ≈≈
+# when z is small: log(1 + z) ≈ z
+# (1/N) is small => log(1+1/N) ≈ 1/N
+n^2
+2*log(2)*N
+# ≈≈
+n
+sqrt(2*log(2)) * sqrt(N)
+# ≈≈
+n
+sqrt(N)
+# ---------------
 
 
