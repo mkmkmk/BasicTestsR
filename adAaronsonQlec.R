@@ -31,6 +31,7 @@ qmm = kronecker(qm,qm) #  |--〉
 I = diag(1, 2)
 NOT = 1 - I
 CNOT = kronecker (q0 %*% t(q0), I) + kronecker (q1 %*% t(q1), NOT)
+CX = CNOT
 ROT = function(th) matrix(c(cos(th), sin(th), -sin(th), cos(th)), 2, 2)
 
 NOTI = kronecker(NOT, I)
@@ -38,6 +39,7 @@ H2 = kronecker(H, H)
 IH = kronecker(I, H)
 HI = kronecker(H, I)
 SWAP = matrix(c(1,0,0,0, 0,0,1,0, 0,1,0,0, 0,0,0,1), 4)
+SW = SWAP
 
 Z = matrix(c(1, 0, 0, -1), 2, 2)
 Y = matrix(c(0, 1i, -1i, 0), 2, 2)
@@ -109,7 +111,9 @@ as.qubit = function(inp, nbits = NA)
 {
     stopifnot(inp >= 0)
     if (is.na(nbits))
-        nbits = max(1, ceiling(log2(inp)))
+        nbits = max(1, ceiling(log2(1 + inp)))
+    #if (inp == 2^nbits) 
+    #    nbits = nbits + 1
     stopifnot(inp < 2^nbits)
     ket = matrix(0, 2^nbits, 1)
     ket[1 + inp] = 1
@@ -118,9 +122,32 @@ as.qubit = function(inp, nbits = NA)
 stopifnot(as.qubit(0) == q0)
 stopifnot(as.qubit(1) == q1)
 stopifnot(as.qubit(3) == q11)
+stopifnot(as.qubit(4) == kronecker(q1, q00))
 stopifnot(as.qubit(0, 2) == q00)
 stopifnot(as.qubit(1, 2) == q01)
 stopifnot(as.qubit(127)[1 + 127] == 1)
+
+as.bits = function(inp, nbits = NA)
+{
+    stopifnot(inp >= 0)
+    if (is.na(nbits))
+        nbits = max(1, ceiling(log2(1 + inp)))
+    #if (inp == 2^nbits) inp = inp + 1
+    stopifnot(inp < 2^nbits)
+    rev(as.integer(intToBits(inp)[1:nbits]))
+}
+
+stopifnot(as.bits(0) == c(0))
+stopifnot(as.bits(1) == c(1))
+stopifnot(as.bits(2) == c(1, 0))
+stopifnot(as.bits(3) == c(1, 1))
+stopifnot(as.bits(4) == c(1, 0, 0))
+stopifnot(as.bits(7) == c(1, 1, 1))
+stopifnot(as.bits(8) == c(1, 0, 0, 0))
+stopifnot(as.bits(15) == c(1, 1, 1, 1))
+stopifnot(as.bits(16) == c(1, 0, 0, 0, 0))
+stopifnot(length(as.bits(65535)) == 16)
+stopifnot(length(as.bits(65536)) == 17)
 
 # --------- end of library code
 
@@ -129,7 +156,7 @@ stopifnot(as.qubit(127)[1 + 127] == 1)
 # ------ ad (2.8)
 {
     r = runif(1)
-    print(r)
+    r
     matrix(c(1/2,1/2,1/2,1/2), nrow=2) %*% t(t(c(r,1-r)))
 }
 
@@ -173,8 +200,7 @@ round(H %*% (H %*% q1), 10)
 H %*% (H %*% (H %*% q1))
 
 
-# --------- ad bomb (it ran a little ahead)
-
+# --------- ad bomb
 N = 10
 step1_dud = kronecker(ROT(pi/2/N) %*% q0, q0)
 step1_bomb = CNOT %*% step1_dud
@@ -457,7 +483,6 @@ S %*% S %*% qm == qp
 
 toState(toBloch(S %*% qm))
 
-
 # p.7.2 cloning
 kronecker(.33*q0+.44*q1, q0)
 
@@ -623,11 +648,8 @@ all(CNOT %*% CNOT == diag(1,4))
 # superdense coding
 
 # eq. (9.1), ok, but I think you need to change the order in the last one
-kronecker(NOT, diag(1,2)) 
 XI
-kronecker(Z, diag(1,2))
 ZI
-kronecker(I, I)
 II
 
 # for the 2nd bit there is always I, so we don't touch it
@@ -763,7 +785,6 @@ all(multikron(I, SWAP, I) %*% multikron(SWAP, I, I) %*% postm == multikron(ifAli
 
 # -----------------
 # ad GHZ
-(multikron(q0, q0, q0) + multikron(q1, q1, q1)) / sqrt(2)
 GHZ
 
 ifISee = q0
@@ -771,7 +792,6 @@ postmeas(GHZ, multikron(q0, q0, ifISee), multikron(q0, q1, ifISee), multikron(q1
 
 ifISee = q1
 postmeas(GHZ, multikron(q0, q0, ifISee), multikron(q0, q1, ifISee), multikron(q1, q0, ifISee), multikron(q1, q1, ifISee))
-
 
 someEn = (multikron(q1, q0, q0) + multikron(q0, q1, q0) + multikron(q0, q0, q1)) / sqrt(3)
 ifISee = q0
@@ -896,10 +916,10 @@ x = q1;  f = 1
 kronecker(x, NOT %*% as.qubit(f)) 
 
 # (17.1) -> (17.2)  &  (17.1) -> (17.3)
-allbits = expand.grid(rep(list(0:1), 2))
-for(xrow in 1:nrow(allbits))
+n = 2
+for(ix in 1:2^n - 1)
 {
-    row = as.numeric(allbits[xrow,])
+    row = as.bits(ix, 2)
     f = row[1]
     x = as.qubit(row[2])
     ok = all(requal(
@@ -909,10 +929,10 @@ for(xrow in 1:nrow(allbits))
     stopifnot(ok)
 }    
 # if the second register is placed in the |+〉state, then nothing happens
-allbits = expand.grid(rep(list(0:1), 2))
-for(xrow in 1:nrow(allbits))
+n = 2
+for(ix in 1:2^n - 1)
 {
-    row = as.numeric(allbits[xrow,])
+    row = as.bits(ix, 2)
     f = row[1]
     x = as.qubit(row[2])
     ok = all(requal(
@@ -922,8 +942,17 @@ for(xrow in 1:nrow(allbits))
     stopifnot(ok)
 }    
 
-f = 0; x = q0
+x = q1
+x = q0
 kronecker(x, qm)
+kronecker(x, (q0 - q1) / 2^.5)
+kronecker(x, q0)/2^.5 - kronecker(x, q1)/2^.5
+
+
+
+
+kronecker(x, qm)
+
 
 kronecker(x, NOT %*% H %*% as.qubit(f)) 
 
@@ -969,21 +998,21 @@ n = 10
 n = 8
 n = 6
 n = 4
-allbits = expand.grid(rep(list(0:1), n))
-for(xrow in 1:2^n)
+for (ix in 1:2^n - 1)
 {
-    x = as.numeric(allbits[xrow,])
+    x = as.bits(ix, n)
     right = c()
-    for(yrow in 1:2^n)
+    for(iy in 1:2^n - 1)
     {
-        y = unlist(allbits[yrow,], use.names = F)
-        right = c(right, (-1)^sum(rev(x)*y))
+        y = as.bits(iy, n)
+        right = c(right, (-1)^sum(x*y))
     }
     right = t(t(right)) / sqrt(2^n)
     
     left = list()
     for(i in 1:length(x))
         left[[i]] = if (x[i] == 0) H %*% q0 else H %*% q1
+    
     left = multikron(left)
     stopifnot(max(Mod(left - right)) < 1e-12)
 }
@@ -994,16 +1023,16 @@ for(xrow in 1:2^n)
 # Bernstein-Vazirani, (18.4)
 n = 8
 n = 4
-allbits = expand.grid(rep(list(0:1), n))
-for(si in 1:2^n)
+#allbits = expand.grid(rep(list(0:1), n))
+for(si in 1:2^n - 1)
 {
-    s = unlist(allbits[si,], use.names = F)
-    ket_s = matrix(0, 2^n, 1)
-    ket_s[si] = 1
+    # s = unlist(allbits[1 + si,], use.names = F)
+    s = as.bits(si, n)
+    ket_s = as.qubit(si, n)
     inner = c()
-    for(xrow in 1:2^n)
+    for(xrow in 1:2^n - 1)
     {
-        x = unlist(allbits[xrow,], use.names = F)
+        x = as.bits(xrow, n)
         inner = c(inner, (-1)^sum(s*x))
     }
     inner = t(t(inner)) / sqrt(2^n)
@@ -1057,6 +1086,84 @@ sqrt(2*log(2)) * sqrt(N)
 # ≈≈
 n
 sqrt(N)
+
 # ---------------
+# ad https://qiskit.org/textbook/ch-algorithms/deutsch-jozsa.html#3.-Creating-Quantum-balanceds--
+#
+# "One of the ways we can guarantee our circuit is balanced is by performing a CNOT for each qubit..."
+#
+REV_4b = multikron(I, SW, I) %*% multikron(SW, SW) %*% multikron(I, SW, I) %*% multikron(SW, SW)
+REV_3b = multikron(I, SW) %*% multikron(SW, I) %*% multikron(I, SW)
+all(REV_3b == multikron(SW, I) %*% multikron(I, SW) %*% multikron(SW, I))
+stopifnot(REV_4b %*% REV_4b == multikron(rep(list(I), 4)))
+stopifnot(REV_3b %*% REV_3b == multikron(rep(list(I), 3)))
+
+# oracle bit - leftmost bit (bit0, bit ids: 3210)
+CX03 = multikron(I, I, SW) %*% multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, SW) 
+CX13 = multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I)
+CX23 = multikron(SW %*% CX %*% SW, I, I)
+balanced_left = CX23 %*% CX13 %*% CX03
+
+# oracle bit - rightmost bit (bit3, bit ids: 3210)
+CX03 = multikron(SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I) %*% multikron(SW, I, I) 
+CX13 = multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I)
+CX23 = multikron(I, I, CX)
+balanced_right = CX23 %*% CX13 %*% CX03 
+
+stopifnot(all(balanced_left == REV_4b %*% balanced_right %*% REV_4b))
+
+balanced_left %*% as.qubit(0, 4)
+balanced_left %*% as.qubit(3, 4)
+balanced_left %*% as.qubit(5, 4)
+balanced_left %*% as.qubit(6, 4)
+
+balanced_left %*% as.qubit(1, 4)
+balanced_left %*% as.qubit(2, 4)
+balanced_left %*% as.qubit(4, 4)
+balanced_left %*% as.qubit(7, 4)
+
+wrap = multikron(I, X, I, I)
+
+# left vs right
+if (F)
+{
+    balanced = balanced_right
+    balanced2 = wrap %*% balanced %*% wrap
+    const0 = multikron(I, I, I, I)
+    const1 = multikron(X, X, X, I)
+    
+    full_dj = multikron(H, H, H, I) %*% balanced %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
+    full_dj = multikron(H, H, H, I) %*% balanced2 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
+    full_dj = multikron(H, H, H, I) %*% const0 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
+    full_dj = multikron(H, H, H, I) %*% const1 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
+    full_dj
+    
+    # meas, P( |000〉)
+    Mod(t(Conj(as.qubit(0, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(1, 4))) %*% full_dj)^2
+    
+} else
+{
+    balanced = balanced_left
+    balanced2 = wrap %*% balanced %*% wrap
+    const0 = multikron(I, I, I, I)
+    const1 = multikron(I, X, X, X)
+    
+    full_dj = multikron(I, H, H, H) %*% balanced %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    full_dj = multikron(I, H, H, H) %*% balanced2 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    full_dj = multikron(I, H, H, H) %*% const0 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    full_dj = multikron(I, H, H, H) %*% const1 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    full_dj
+    
+    # meas, P( |000〉)
+    Mod(t(Conj(as.qubit(0, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(8, 4))) %*% full_dj)^2
+    
+}
+
+all(kronecker(X, I) %*% q10 == q00)
+all(kronecker(I, X) %*% q10 == q11)
+
+
+
+
 
 
