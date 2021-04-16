@@ -71,8 +71,20 @@ sapply(2:50, function(n) n*(n-1)/2)
 
 sapply(2:50, function(n) n*(n-1)/2)
 
-# p-stwo że w żadnej z tych wielu par nikt nie jednocześnie urodzin
+# p-stwo że w żadnej z tych wielu par nikt nie ma jednocześnie urodzin
 pp = sapply(2:66, function(n) (1-1/365)^(n*(n-1)/2))
 plot(2:66, pp, type = 'l')
+
+
+
+
+
+
+
+
+
+
+
+
 
 
