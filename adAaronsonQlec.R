@@ -1089,7 +1089,7 @@ sqrt(N)
 
 # ---------------
 # ad https://qiskit.org/textbook/ch-algorithms/deutsch-jozsa.html#3.-Creating-Quantum-balanceds--
-#
+# Deutsch-Jozsa
 # "One of the ways we can guarantee our circuit is balanced is by performing a CNOT for each qubit..."
 #
 REV_4b = multikron(I, SW, I) %*% multikron(SW, SW) %*% multikron(I, SW, I) %*% multikron(SW, SW)
@@ -1099,16 +1099,16 @@ stopifnot(REV_4b %*% REV_4b == multikron(rep(list(I), 4)))
 stopifnot(REV_3b %*% REV_3b == multikron(rep(list(I), 3)))
 
 # oracle bit - leftmost bit (bit0, bit ids: 3210)
-CX03 = multikron(I, I, SW) %*% multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, SW) 
-CX13 = multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I)
-CX23 = multikron(SW %*% CX %*% SW, I, I)
-balanced_left = CX23 %*% CX13 %*% CX03
+CX03l = multikron(I, I, SW) %*% multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, SW) 
+CX13l = multikron(I, SW, I) %*% multikron(SW %*% CX %*% SW, I, I) %*% multikron(I, SW, I)
+CX23l = multikron(SW %*% CX %*% SW, I, I)
+balanced_left = CX23l %*% CX13l %*% CX03l
 
 # oracle bit - rightmost bit (bit3, bit ids: 3210)
-CX03 = multikron(SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I) %*% multikron(SW, I, I) 
-CX13 = multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I)
-CX23 = multikron(I, I, CX)
-balanced_right = CX23 %*% CX13 %*% CX03 
+CX03r = multikron(SW, I, I) %*% multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I) %*% multikron(SW, I, I) 
+CX13r = multikron(I, SW, I) %*% multikron(I, I, CX) %*% multikron(I, SW, I)
+CX23r = multikron(I, I, CX)
+balanced_right = CX23r %*% CX13r %*% CX03r 
 
 stopifnot(all(balanced_left == REV_4b %*% balanced_right %*% REV_4b))
 
@@ -1123,39 +1123,47 @@ balanced_left %*% as.qubit(4, 4)
 balanced_left %*% as.qubit(7, 4)
 
 wrap = multikron(I, X, I, I)
+wrap = multikron(I, X, I, I)
+wrap = multikron(X, X, X, X)
 
 # left vs right
 if (F)
 {
+    # right
     balanced = balanced_right
-    balanced2 = wrap %*% balanced %*% wrap
+    balancedwrp = wrap %*% balanced %*% wrap
     const0 = multikron(I, I, I, I)
     const1 = multikron(X, X, X, I)
     
     full_dj = multikron(H, H, H, I) %*% balanced %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
-    full_dj = multikron(H, H, H, I) %*% balanced2 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
+    full_dj = multikron(H, H, H, I) %*% balancedwrp %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
     full_dj = multikron(H, H, H, I) %*% const0 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
     full_dj = multikron(H, H, H, I) %*% const1 %*% multikron(H, H, H, H %*% X) %*% as.qubit(0, 4)
-    full_dj
-    
-    # meas, P( |000〉)
+
+    # meas 
+    # P( |000〉)
     Mod(t(Conj(as.qubit(0, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(1, 4))) %*% full_dj)^2
+    # P( |111〉)
+    Mod(t(Conj(as.qubit(14, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(15, 4))) %*% full_dj)^2
     
 } else
-{
+{   
+    # left
     balanced = balanced_left
-    balanced2 = wrap %*% balanced %*% wrap
+    balancedwrp = wrap %*% balanced %*% wrap
     const0 = multikron(I, I, I, I)
     const1 = multikron(I, X, X, X)
     
     full_dj = multikron(I, H, H, H) %*% balanced %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
-    full_dj = multikron(I, H, H, H) %*% balanced2 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    full_dj = multikron(I, H, H, H) %*% balancedwrp %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
     full_dj = multikron(I, H, H, H) %*% const0 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
     full_dj = multikron(I, H, H, H) %*% const1 %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
-    full_dj
-    
-    # meas, P( |000〉)
+
+    # meas
+    # P( |000〉)
     Mod(t(Conj(as.qubit(0, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(8, 4))) %*% full_dj)^2
+    # P( |111〉)
+    Mod(t(Conj(as.qubit(7, 4))) %*% full_dj)^2 + Mod(t(Conj(as.qubit(15, 4))) %*% full_dj)^2
     
 }
 
@@ -1163,6 +1171,25 @@ all(kronecker(X, I) %*% q10 == q00)
 all(kronecker(I, X) %*% q10 == q11)
 
 
+#---------
+# https://qiskit.org/textbook/ch-algorithms/bernstein-vazirani.html
+#
+# bits: o210
+all(Z %*% H %*% q0 == qm)
+bv_func = multikron(I, I, I, I) #000
+bv_func = CX23l %*% CX13l %*% CX03l # 111
+bv_func = CX23l %*% CX03l # 101
+bv_func = CX23l %*% CX13l # 110
+bv_func = CX13l %*% CX03l # 011
+{
+    full_bv = multikron(I, H, H, H) %*% bv_func %*% multikron(H %*% X, H, H, H) %*% as.qubit(0, 4)
+    # meas bits 210
+    res = matrix(0, 8, 1)
+    for (val in 0:7)
+        res[1+val, 1] = Mod(t(Conj(as.qubit(val, 4))) %*% full_bv)^2 + Mod(t(Conj(as.qubit(8+val, 4))) %*% full_bv)^2
+    round(res, 10)
+    as.bits(which.max(res) - 1, 3)
+}
 
 
 
