@@ -6,14 +6,17 @@
 
 library(Rcpp)
 
+epsilon = 1e-12
+
+c = 11
+c = 7
 c = 5
 c = 3
-c = 7
-c = 11
 
-mx = 50
-mx = 1000
 mx = 10000
+mx = 1000
+mx = 100 
+mx = 50
 
 # https://en.wikipedia.org/wiki/Modular_exponentiation
 cfun = 
@@ -94,9 +97,9 @@ if (FALSE)
         q = trunc(runif(1, c, mx))
         if (p==q)
             next
-        if (!all(q / 2:(q-1) - trunc(q / 2:(q-1)) != 0))
+        if (!all(abs(q / 2:(q-1) - trunc(q / 2:(q-1))) > epsilon))
             next
-        if (!all(p / 2:(p-1) - trunc(p / 2:(p-1)) != 0))
+        if (!all(abs(p / 2:(p-1) - trunc(p / 2:(p-1))) > epsilon))
             next
         Npq = (p-1) * (q-1)
         if (Npq/c - trunc(Npq/c) != 0)
