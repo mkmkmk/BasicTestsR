@@ -14,10 +14,11 @@ using namespace Rcpp;
 int state = 0;
 
 // [[Rcpp::export]]
-NumericVector timesTwo(NumericVector x) {
-  state++;
+NumericVector timesTwo(NumericVector x) 
+{
+    state++;
     printf("state = %d \n", state);
-  return x * 2;
+    return x * 2;
 }
 
 
@@ -28,8 +29,11 @@ NumericVector timesTwo(NumericVector x) {
 //
 
 /*** R
-timesTwo(42)
-timesTwo(42)
-timesTwo(42)
-timesTwo(42)
+if (F)
+{
+    timesTwo(42)
+    timesTwo(42)
+    timesTwo(42)
+    timesTwo(42)
+}
 */

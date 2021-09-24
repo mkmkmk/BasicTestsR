@@ -29,7 +29,6 @@ if(F)
 
 }else
 {
-
     modSig = 0
     for(i in -250:250)
     {
@@ -37,7 +36,6 @@ if(F)
             modSig = modSig + fr / band
         else
             modSig = modSig + 1 / i / pi * sin(pi * fr / band * i) * cos(2 * pi * 1:(fullTm * fsample) * (fr * i) / fsample)
-        
     }
     
     if(F)
