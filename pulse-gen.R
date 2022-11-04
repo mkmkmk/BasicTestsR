@@ -1,3 +1,16 @@
+# test pokazuje generowanie ciągu impulsów ze składowych sinusoidalnych
+#
+# patrz >> ad DSP
+#
+# w funkcji sinx/x przy generowaniu przebiegu, w argumencie sinusa jest duty 
+# czyli 1/duty to okres sinusa czyli jedno z pierwszych zer sinx/x
+# więc zgrubnie ta liczba razy odstęp prążków to pasmo
+# band = fr/duty
+# w każdym razie współczynnik wypełnienia jest powiązany z pasmem
+# gdy duty zmierza do zera, impulsy w granicy stają się impulsami Diracka
+# i wtedy okres sinx/x staje się nieskończony wszystkie amplitudy 
+# w dziedzinie częstotliwości stają się podobne i ciągną się do nieskończoności
+
 rm(list = ls())
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 print(getwd())
@@ -23,12 +36,6 @@ fr = 20
 duty = 0.05
 duty = 0.2
 duty = 0.1
-
-# w funkcji sinx/x przy generowaniu modSig, w argumencie sinusa jest 1/duty 
-# czyli to okres sinusa czyli jedno z pierwszych zer sinx/x
-# więc zgrubnie ta liczba razy odstęp prążków to pasmo
-# band = fr/duty
-# w każdym razie współczynnik wypełnienia jest powiązany z pasmem
 
 # liczba prążków
 nbar = 1/duty
