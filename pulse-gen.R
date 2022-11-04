@@ -15,15 +15,26 @@ fullTm = 2
 # liczba próbek
 nsamp = fullTm * fsample
 
-# liczba prążków
-nbar = 100
-nbar = 15
-nbar = 200
+
 # częstotliwość sygnału - impulsów (Hz)
 fr = 20
 
 # współczynnik wypełnienia
+duty = 0.05
+duty = 0.2
 duty = 0.1
+
+# w funkcji sinx/x przy generowaniu modSig, w argumencie sinusa jest 1/duty 
+# czyli to okres sinusa czyli jedno z pierwszych zer sinx/x
+# więc zgrubnie ta liczba razy odstęp prążków to pasmo
+# band = fr/duty
+# w każdym razie współczynnik wypełnienia jest powiązany z pasmem
+
+# liczba prążków
+nbar = 1/duty
+nbar = 100
+nbar = 200
+nbar = 20
 
 # wypełnienie zerami w próbkach
 pd = fsample * (1 / fr  - duty / fr)
@@ -63,10 +74,11 @@ for(i in 0:nbar)
     modSig = modSig + ai * cos(carg) + bi * sin(carg)
 }
 
-plot(modSig0[1:(fsample * 1 / fr)], type='l', col = 'blue')
+ylim = range(modSig) * 1.1
+plot(modSig0[1:(fsample * 1 / fr)], type='l', col = 'blue', ylim = ylim)
 lines(modSig[1:(fsample * 1 / fr)], type='l', col = 'red')
 
-plot(modSig0[1:(fsample * 4 / fr)], type='l', col = 'blue')
+plot(modSig0[1:(fsample * 4 / fr)], type='l', col = 'blue', ylim = ylim)
 lines(modSig[1:(fsample * 4 / fr)], type='l', col = 'red')
 
 # + prostsza wersja, symetryczna, bi = 0, wypełnienie jest 2x większe, bo są 2 połówki
@@ -82,10 +94,11 @@ for(i in 0:nbar)
     modSig2 = modSig2 + 2 * ai * cos(carg)
 }
 
-plot(modSig0[1:(fsample * 1 / fr)], type='l', col = 'blue')
+ylim = range(modSig2) * 1.1
+plot(modSig0[1:(fsample * 1 / fr)], type='l', col = 'blue', ylim = ylim)
 lines(modSig2[1:(fsample * 1 / fr)], type='l', col = 'red')
 
-plot(modSig0[1:(fsample * 4 / fr)], type='l', col = 'blue')
+plot(modSig0[1:(fsample * 4 / fr)], type='l', col = 'blue', ylim = ylim)
 lines(modSig2[1:(fsample * 4 / fr)], type='l', col = 'red')
 
 
@@ -107,4 +120,6 @@ lines(xf, Re(f), type = 'l', col = 'blue')
 
 plot(xf, Im(f0), type = 'l', col = 'red', ylim = max(Mod(f0))*c(-1,1))
 lines(xf, Im(f), type = 'l', col = 'blue')
+
+
 
