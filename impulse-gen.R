@@ -59,7 +59,7 @@ for(i in 0:nbar)
         ai = 1/i/pi * sin(2*pi * i * duty) 
         bi = 2/i/pi * sin(pi * i * duty)^2 
     }
-    carg = 2*pi * 1:(fullTm * fsample) * (fr * i) / fsample
+    carg = 2*pi * 1:nsamp * (fr * i) / fsample
     modSig = modSig + ai * cos(carg) + bi * sin(carg)
 }
 
@@ -78,7 +78,7 @@ for(i in 0:nbar)
         ai = duty 
     else 
         ai = 1/i/pi * sin(2*pi * i * duty) 
-    carg = 2*pi * 1:(fullTm * fsample) * (fr * i) / fsample
+    carg = 2*pi * 1:nsamp * (fr * i) / fsample
     modSig2 = modSig2 + 2 * ai * cos(carg)
 }
 
