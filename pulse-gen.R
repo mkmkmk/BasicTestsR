@@ -2,14 +2,16 @@
 #
 # patrz >> ad DSP
 #
-# w funkcji sinx/x przy generowaniu przebiegu, w argumencie sinusa jest duty 
-# czyli 1/duty to okres sinusa czyli jedno z pierwszych zer sinx/x
-# więc zgrubnie ta liczba razy odstęp prążków to pasmo
-# band = fr/duty
-# w każdym razie współczynnik wypełnienia jest powiązany z pasmem
-# gdy duty zmierza do zera, impulsy w granicy stają się impulsami Diracka
-# i wtedy okres sinx/x staje się nieskończony wszystkie amplitudy 
-# w dziedzinie częstotliwości stają się podobne i ciągną się do nieskończoności
+#' dla przebiegu pulse-train w funkcji sinx/x w argumencie sinusa 
+#' jest współczynnik wypełnienia, czyli jego odwrotność to okres sinusa, 
+#' czyli jedno z pierwszych zer sinx/x, więc zgrubnie ta liczba razy odstęp 
+#' prążków określa pasmo, w każdym razie współczynnik wypełnienia jest powiązany 
+#' z pasmem, gdy współczynnik wypełnienia zmierza do zera, to impulsy (w granicy) 
+#' stają się impulsami Diracka, wtedy też okres funkcji sinx/x staje się nieskończony 
+#' amplitudy wszystkich prążków (dziedzina częstotliwości) stają się podobne 
+#' i ciągną się do nieskończoności
+#'
+
 
 rm(list = ls())
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
