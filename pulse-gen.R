@@ -7,7 +7,7 @@
 #' czyli jedno z pierwszych zer sinx/x, więc zgrubnie ta liczba razy odstęp 
 #' prążków określa pasmo, w każdym razie współczynnik wypełnienia jest powiązany 
 #' z pasmem, gdy współczynnik wypełnienia zmierza do zera, to impulsy (w granicy) 
-#' stają się impulsami Diracka, wtedy też okres funkcji sinx/x staje się nieskończony 
+#' stają się impulsami Diraca, wtedy też okres funkcji sinx/x staje się nieskończony 
 #' amplitudy wszystkich prążków (dziedzina częstotliwości) stają się podobne 
 #' i ciągną się do nieskończoności
 #'
