@@ -24,8 +24,8 @@ carrFreq = 210
 fr = 20
 
 # współczynnik wypełnienia
-duty = 0.1
 duty = 0.2
+duty = 0.1
 
 # w funkcji sinx/x przy generowaniu modSig, w argumencie sinusa jest 1/duty 
 # czyli to okres sinusa czyli jedno z pierwszych zer sinx/x
@@ -80,7 +80,8 @@ if(F)
 }
 
 # modulacja --> przeniesienie na wyższą częstotliwość
-# czyli obwiednia to sygnał impulsu, im mniejsze pasmo tym bardziej zaokrąglony
+# czyli obwiednia to sygnał impulsu, 
+# im krótszy impuls tym większe pasmo / więcej prążków
 combSig = modSig * cos(2 * pi * 1:nsamp * carrFreq / fsample)
 
 plot(combSig[1:(fsample * 4 / fr)], type='l')
