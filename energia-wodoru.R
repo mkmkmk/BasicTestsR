@@ -26,7 +26,7 @@
 1000 * 1 / (8 + 1) / 0.09
 
 #' z jednego grama wody tyle litrów wodoru:
-1000 * 1 / (8 + 1) / 0.09 / 1000
+1 / (8 + 1) / 0.09
 
 
 #' Wh energii zużyto:
@@ -41,15 +41,16 @@
 #' "It is possible to produce 1.23 litres of hydrogen from one gram of water"
 #' 
 #' uzyskano litrów wodoru: 
-0.36 * 1.32 
+0.36 * 1.23
 
 #' gęstość energii wodoru MJ/litr: 0.01079
 #' 
 #' wytworzony wodór ma tyle J energii:
-0.36 * 1.32 * 0.01079 * 1e6
+0.36 * 1.23 * 0.01079 * 1e6
 
 #' sprawność %
-(0.36 * 1.32 * 0.01079 * 1e6)/(7.5 * 0.06 * 3600) * 100
+(0.36 * 1.23 * 0.01079 * 1e6) / (7.5 * 0.06 * 3600) * 100
+(0.36 * 1 / (8 + 1) / 0.082 * 0.01079 * 1e6) / (7.5 * 0.06 * 3600) * 100
 
 
 #+ echo=F, include=F, warnings=F
