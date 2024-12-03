@@ -30,3 +30,11 @@ lines(h2$mids, h2$count, type='o', col='blue')
 par(pop)
 
 print(t.test(y ~ x, data = dt))
+
+shapiro.test(group1)
+shapiro.test(group2)
+
+var.test(group1, group2)
+
+shapiro.test(rnorm(100, mean = 5, sd = 3))
+shapiro.test(runif(100, min = 2, max = 4))
