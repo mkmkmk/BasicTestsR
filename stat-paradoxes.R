@@ -4,9 +4,9 @@
 ################################################
 # https://en.wikipedia.org/wiki/Simpson%27s_paradox#Vector_interpretation
 
-# szkodliwe leczenie było zastosowane często dla najłatwierszych przypadków
+# szkodliwe leczenie było zastosowane często dla najłatwiejszych przypadków
 # a rzadko dla najtrudniejszych przypadków
-# i jednocześnie brak leczenia był zastosowany często dla trudnych przypadków 
+# i jednocześnie brak leczenia był zastosowany często dla trudnych przypadków
 # i rzadko dla łatwych przypadków
 # dlatego wydało się że szkodliwe leczenie jest lepsze niż brak leczenia
 
