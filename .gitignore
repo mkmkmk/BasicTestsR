@@ -1,1 +1,7 @@
 .Rhistory
+*.png
+*.pdf
+*.doc*
+*.html
+*.log
+*.txt
