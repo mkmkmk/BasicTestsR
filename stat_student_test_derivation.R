@@ -5,6 +5,7 @@ if (F)
     print(getwd())
 }
 
+
 # 1. For a single sample mean, we know that:
 #     X̄ ~ N(μ, σ²/n)
 #     → mean has normal distribution with the same mean and n-times smaller variance
@@ -125,7 +126,6 @@ if (F)
 }
 
 
-
 # -------------------
 # with increasing degrees of freedom, the Student distribution becomes a normal distribution
 {
@@ -156,7 +156,6 @@ if (F)
     p_value = 2 * pt(-abs(t_stat), df)
     print(paste("p-value =", p_value))
 }
-
 
 
 # -------------------
