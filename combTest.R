@@ -66,9 +66,6 @@ if(F)
 
 #combSig = modSig * cos(2 * pi * 1:(fullTm * fsample) * carrFreq / fsample)
 
-
-
-
 plot(modSig[1:(fsample * 4 / fr)], type='l')
 plot(modSig[1:(fsample * 1 / fr)], type='o')
 
