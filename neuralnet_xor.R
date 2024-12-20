@@ -20,7 +20,7 @@ pred2 <- compute(nn2, data_xor[,1:2])$net.result
 
 results <- data.frame(
     Expected = data_xor$output,
-    Nieliniowa = round(pred1, 3),
-    Liniowa = round(pred2, 3)
+    Nonlinear = round(pred1, 3),
+    Linear = round(pred2, 3)
 )
 print(results)
